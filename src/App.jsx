@@ -1,21 +1,12 @@
 import JoinForm from './views/JoinForm.jsx';
 import Host from './views/Host.jsx';
-
-function Backdrop() {
-  return (
-    <div className="backdrop" aria-hidden="true">
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
+import ForestBackdrop from './components/ForestBackdrop.jsx';
 
 export default function App() {
   const isJoin = window.location.pathname.startsWith('/join');
   return (
     <>
-      <Backdrop />
+      <ForestBackdrop />
       {isJoin ? <JoinForm /> : <Host />}
     </>
   );

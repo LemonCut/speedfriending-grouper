@@ -5,7 +5,16 @@ const { Engine, Bodies, Body, Composite } = Matter;
 
 const STEP = 1000 / 60;
 const SPRING = 0.000012; // pull toward each bubble's drifting anchor
-const HUES = [182, 198, 218, 250, 275, 300, 325, 345];
+const HUES = [
+  145, // lush pine green
+  168, // emerald spruce
+  36,  // campfire gold
+  22,  // bonfire amber
+  14,  // glowing ember
+  180, // cool mountain fir
+  46,  // firefly lantern yellow
+  122, // deep forest moss
+];
 
 function hueFor(name) {
   let h = 7;
