@@ -38,10 +38,12 @@ const requireAdmin = (req, res, next) =>
 const fullName = (p) => [p.firstName, p.lastName].filter(Boolean).join(' ') || p.name || '';
 
 app.get('/api/state', (req, res) => {
-  const bits = store.list('bit');
-  const bytes = store.list('byte');
-  const body = { locked: store.isLocked(), bitCount: bits.length, byteCount: bytes.length };
+  const body = { locked: store.isLocked() };
   if (isAdmin(req)) {
+    const bits = store.list('bit');
+    const bytes = store.list('byte');
+    body.bitCount = bits.length;
+    body.byteCount = bytes.length;
     body.recent = [
       ...bits.map((p) => ({ id: p.id, name: fullName(p), role: 'bit', timestamp: p.timestamp })),
       ...bytes.map((p) => ({ id: p.id, name: fullName(p), role: 'byte', timestamp: p.timestamp })),

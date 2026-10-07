@@ -1,12 +1,4 @@
-import { useEffect, useState } from 'react';
-import { api } from '../api.js';
-
 export default function HostIntake({ state, authed }) {
-  const [join, setJoin] = useState(null);
-  useEffect(() => {
-    api.joinInfo().then(setJoin).catch(() => {});
-  }, []);
-
   const { bitCount = 0, byteCount = 0, recent } = state ?? {};
   const lo = byteCount ? Math.floor(bitCount / byteCount) : 0;
   const hi = byteCount ? Math.ceil(bitCount / byteCount) : 0;
@@ -21,31 +13,40 @@ export default function HostIntake({ state, authed }) {
           <br />
           Speedfriending
         </h1>
-        <p className="lede">Scan to check in. Once everyone’s here, we’ll reveal the groups.</p>
-        <div className="qr-card glass">
-          {join ? <img src={join.qr} alt={`QR code linking to ${join.url}`} /> : <div style={{ width: 180, height: 180 }} />}
-          <div className="qr-text">
-            <span className="eyebrow">Or visit</span>
-            <span className="qr-url">{join?.url ?? '…'}</span>
-          </div>
+        <p className="lede">Join to check in. Once everyone’s here, we’ll reveal the groups.</p>
+        <div>
+          <a
+            href="https://groups.lemoncut.dev/join"
+            className="btn btn-primary join-btn"
+            id="join-btn"
+          >
+            Join
+          </a>
         </div>
       </section>
 
       <section className="intake-side">
-        <div className="counters">
-          <div className="counter bit glass rise-in" style={{ animationDelay: '0.1s' }}>
-            <span className="num">{bitCount}</span>
-            <span className="lbl">Bits checked in</span>
+        {authed ? (
+          <div className="counters">
+            <div className="counter bit glass rise-in" style={{ animationDelay: '0.1s' }}>
+              <span className="num">{bitCount}</span>
+              <span className="lbl">Bits checked in</span>
+            </div>
+            <div className="counter byte glass rise-in" style={{ animationDelay: '0.2s' }}>
+              <span className="num">{byteCount}</span>
+              <span className="lbl">Bytes checked in</span>
+            </div>
+            <div className="counter glass rise-in" style={{ animationDelay: '0.3s' }}>
+              <span className="num">{perGroup}</span>
+              <span className="lbl">Bits per group</span>
+            </div>
           </div>
-          <div className="counter byte glass rise-in" style={{ animationDelay: '0.2s' }}>
-            <span className="num">{byteCount}</span>
-            <span className="lbl">Bytes checked in</span>
+        ) : (
+          <div className="stats-locked glass rise-in" style={{ animationDelay: '0.1s' }}>
+            <span className="eyebrow">Check-in stats</span>
+            <p className="empty-hint">Organizer login required to view stats.</p>
           </div>
-          <div className="counter glass rise-in" style={{ animationDelay: '0.3s' }}>
-            <span className="num">{perGroup}</span>
-            <span className="lbl">Bits per group</span>
-          </div>
-        </div>
+        )}
 
         <div className="recent glass rise-in" style={{ animationDelay: '0.4s' }}>
           <span className="eyebrow">Just arrived</span>

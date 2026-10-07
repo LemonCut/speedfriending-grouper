@@ -186,6 +186,8 @@ h1, h2, h3, p { margin: 0; }
   padding: 0.85em 1.6em;
   font-weight: 600;
   cursor: pointer;
+  color: inherit;
+  text-decoration: none;
   transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease, opacity 0.2s;
 }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -328,13 +330,21 @@ h1, h2, h3, p { margin: 0; }
   z-index: 2;
 }
 .intake-hero { display: flex; flex-direction: column; gap: 1.4rem; }
-.intake-hero h1 { font-size: clamp(3rem, 6.5vw, 6rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.02em; }
+.intake-hero h1 { font-size: clamp(2.7rem, 5.85vw, 5.4rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.02em; }
 .intake-hero .lede { font-size: clamp(1.1rem, 1.6vw, 1.45rem); color: var(--ink-dim); max-width: 32ch; }
+.join-btn {
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  padding: 0.9em 2.5em;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  width: fit-content;
+}
 .qr-card { padding: 1.25rem; display: flex; gap: 1.25rem; align-items: center; width: fit-content; }
 .qr-card img { width: clamp(150px, 15vw, 220px); aspect-ratio: 1; border-radius: 14px; background: white; padding: 6px; }
 .qr-card .qr-text { display: flex; flex-direction: column; gap: 0.4rem; }
 .qr-card .qr-url { font-family: ui-monospace, monospace; font-size: 0.95rem; color: var(--bit); word-break: break-all; }
 .intake-side { display: flex; flex-direction: column; gap: 1.25rem; min-height: 0; max-height: 100%; }
+.stats-locked { padding: 1.25rem 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .counters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 .counter { padding: 1.25rem 1.4rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .counter .num { font-size: clamp(2.4rem, 4.5vw, 4rem); font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
