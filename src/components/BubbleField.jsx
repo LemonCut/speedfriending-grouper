@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Matter from 'matter-js';
 import { formatNameLines } from '../formatName.js';
+import { fontFor } from '../formatGroupTitle.js';
 
 const { Engine, Bodies, Body, Composite } = Matter;
 
@@ -12,7 +13,7 @@ const HUES = [
   36,  // campfire gold
   22,  // bonfire amber
   14,  // glowing ember
-  180, // cool mountain fir
+  150, // cool mountain fir
   46,  // firefly lantern yellow
   122, // deep forest moss
 ];
@@ -21,13 +22,6 @@ function hueFor(name) {
   let h = 7;
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return HUES[h % HUES.length];
-}
-
-function fontFor(n) {
-  if (n <= 6) return 'clamp(2.7rem, 7.2vh, 5.1rem)';
-  if (n <= 12) return 'clamp(2.1rem, 5.4vh, 3.9rem)';
-  if (n <= 20) return 'clamp(1.725rem, 4.35vh, 3.15rem)';
-  return 'clamp(1.425rem, 3.45vh, 2.25rem)';
 }
 
 /** Spread anchors over the field in a balanced, organic cloud pattern */
@@ -61,10 +55,11 @@ function computeAnchors(n, W, H) {
  * and bounce off each other via Matter.js rigid-body physics into a word cloud,
  * floating in place with gentle resting drift.
  */
-export default function BubbleField({ names }) {
+export default function BubbleField({ names, multiCount = 1 }) {
   const fieldRef = useRef(null);
   const bubbleRefs = useRef([]);
-  const key = names.join('\u0000');
+  const key = `${names.join('\u0000')}-${multiCount}`;
+
 
   useEffect(() => {
     const field = fieldRef.current;
@@ -77,13 +72,13 @@ export default function BubbleField({ names }) {
 
     document.fonts.ready.then(() => {
       if (cancelled) return;
-      let W = field.clientWidth;
-      let H = field.clientHeight;
-      const pad = 28;
+      let W = field.clientWidth || (multiCount > 1 ? 380 : 1200);
+      let H = field.clientHeight || (multiCount > 1 ? 320 : 800);
+      const pad = multiCount > 1 ? 16 : 28;
 
       const engine = Engine.create({ gravity: { x: 0, y: 0, scale: 0 } });
       const sizes = els.map((el) => ({ w: el.offsetWidth || 180, h: el.offsetHeight || 54 }));
-      let anchors = computeAnchors(names.length, W - pad * 2, H - pad * 2).map((p) => ({ x: p.x + pad, y: p.y + pad }));
+      let anchors = computeAnchors(names.length, Math.max(40, W - pad * 2), Math.max(40, H - pad * 2)).map((p) => ({ x: p.x + pad, y: p.y + pad }));
       const phases = names.map(() => Math.random() * Math.PI * 2);
 
       let walls = [];
@@ -91,10 +86,10 @@ export default function BubbleField({ names }) {
         if (walls.length) Composite.remove(engine.world, walls);
         const T = 400;
         walls = [
-          Bodies.rectangle(W / 2, -T / 2, W * 3, T, { isStatic: true }),
-          Bodies.rectangle(W / 2, H + T / 2, W * 3, T, { isStatic: true }),
-          Bodies.rectangle(-T / 2, H / 2, T, H * 3, { isStatic: true }),
-          Bodies.rectangle(W + T / 2, H / 2, T, H * 3, { isStatic: true }),
+          Bodies.rectangle(W / 2, -T / 2 + pad, W * 3, T, { isStatic: true }),
+          Bodies.rectangle(W / 2, H + T / 2 - pad, W * 3, T, { isStatic: true }),
+          Bodies.rectangle(-T / 2 + pad, H / 2, T, H * 3, { isStatic: true }),
+          Bodies.rectangle(W + T / 2 - pad, H / 2, T, H * 3, { isStatic: true }),
         ];
         Composite.add(engine.world, walls);
       };
@@ -104,14 +99,14 @@ export default function BubbleField({ names }) {
       const currentScales = names.map(() => S0);
       const spawnTimes = names.map(() => 0);
 
-      const GAP = 12; // breathing room between bare words
+      const GAP = multiCount > 1 ? 8 : 12; // breathing room between bare words
       const centerX = W / 2;
       const centerY = H / 2;
 
       const bodies = sizes.map((s) => {
         const b = Bodies.rectangle(
-          centerX + (Math.random() - 0.5) * 30,
-          centerY + (Math.random() - 0.5) * 30,
+          centerX + (Math.random() - 0.5) * (multiCount > 1 ? 16 : 30),
+          centerY + (Math.random() - 0.5) * (multiCount > 1 ? 16 : 30),
           s.w + GAP,
           s.h + GAP,
           {
@@ -130,18 +125,34 @@ export default function BubbleField({ names }) {
       const spawnAt = names.map((_, i) => 80 + i * stagger);
       const active = names.map(() => false);
 
-      const onResize = () => {
-        W = field.clientWidth;
-        H = field.clientHeight;
-        anchors = computeAnchors(names.length, W - pad * 2, H - pad * 2).map((p) => ({ x: p.x + pad, y: p.y + pad }));
+      const updateDimensions = (newW, newH) => {
+        W = newW;
+        H = newH;
+        anchors = computeAnchors(names.length, Math.max(40, W - pad * 2), Math.max(40, H - pad * 2)).map((p) => ({ x: p.x + pad, y: p.y + pad }));
         buildWalls();
       };
+
+      const onResize = () => updateDimensions(field.clientWidth, field.clientHeight);
       window.addEventListener('resize', onResize);
+
+      let ro;
+      if (typeof ResizeObserver !== 'undefined') {
+        ro = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            const cr = entry.contentRect;
+            if (cr.width > 20 && cr.height > 20 && (Math.abs(cr.width - W) > 6 || Math.abs(cr.height - H) > 6)) {
+              updateDimensions(cr.width, cr.height);
+            }
+          }
+        });
+        ro.observe(field);
+      }
 
       const start = performance.now();
       let last = start;
       let acc = 0;
       const GROW_MS = 430;
+      const speedScale = multiCount > 1 ? Math.min(1, Math.hypot(W, H) / 900) : 1;
 
       const tick = (now) => {
         const t = now - start;
@@ -159,10 +170,10 @@ export default function BubbleField({ names }) {
             const dx = a.x - centerX;
             const dy = a.y - centerY;
             const dist = Math.hypot(dx, dy) || 1;
-            const speed = 6.8 + Math.random() * 5.2;
+            const speed = (6.8 + Math.random() * 5.2) * (multiCount > 1 ? (0.42 + 0.58 * speedScale) : 1);
             Body.setVelocity(b, {
-              x: (dx / dist) * speed + (Math.random() - 0.5) * 4.5,
-              y: (dy / dist) * speed + (Math.random() - 0.5) * 4.5,
+              x: (dx / dist) * speed + (Math.random() - 0.5) * (multiCount > 1 ? 2.5 : 4.5),
+              y: (dy / dist) * speed + (Math.random() - 0.5) * (multiCount > 1 ? 2.5 : 4.5),
             });
             els[i].classList.add('active');
           }
@@ -191,10 +202,25 @@ export default function BubbleField({ names }) {
             // Floating drift & spring pull toward anchor
             const a = anchors[i];
             const p = phases[i];
-            const tx = a.x + Math.sin(tt * 0.00042 + p) * W * 0.014 + Math.sin(tt * 0.0011 + p * 2) * 5;
-            const ty = a.y + Math.cos(tt * 0.0005 + p * 1.3) * H * 0.018;
+            const driftScale = multiCount > 1 ? 0.008 : 0.014;
+            const tx = a.x + Math.sin(tt * 0.00042 + p) * W * driftScale + Math.sin(tt * 0.0011 + p * 2) * (multiCount > 1 ? 3 : 5);
+            const ty = a.y + Math.cos(tt * 0.0005 + p * 1.3) * H * (driftScale * 1.25);
             const k = SPRING * b.mass;
             Body.applyForce(b, b.position, { x: (tx - b.position.x) * k, y: (ty - b.position.y) * k });
+
+            // Bounded safety clamp
+            const halfW = (sizes[i].w * currentScales[i]) / 2;
+            const halfH = (sizes[i].h * currentScales[i]) / 2;
+            const minX = pad + halfW;
+            const maxX = Math.max(minX, W - pad - halfW);
+            const minY = pad + halfH;
+            const maxY = Math.max(minY, H - pad - halfH);
+            if (b.position.x < minX || b.position.x > maxX || b.position.y < minY || b.position.y > maxY) {
+              Body.setPosition(b, {
+                x: Math.min(maxX, Math.max(minX, b.position.x)),
+                y: Math.min(maxY, Math.max(minY, b.position.y)),
+              });
+            }
           });
           Engine.update(engine, STEP);
           acc -= STEP;
@@ -211,6 +237,7 @@ export default function BubbleField({ names }) {
 
       cleanupPhysics = () => {
         window.removeEventListener('resize', onResize);
+        if (ro) ro.disconnect();
         Composite.clear(engine.world, false);
         Engine.clear(engine);
       };
@@ -230,7 +257,7 @@ export default function BubbleField({ names }) {
   }, [key]);
 
   return (
-    <div className="bubble-field" ref={fieldRef} style={{ '--bubble-font': fontFor(names.length) }}>
+    <div className="bubble-field" ref={fieldRef} style={{ '--bubble-font': fontFor(names.length, multiCount) }}>
       {names.length === 0 && <div className="bubble-empty">No bits in this group</div>}
       {names.map((name, i) => {
         const lines = formatNameLines(name);

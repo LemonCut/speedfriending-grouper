@@ -416,10 +416,11 @@ h1, h2, h3, p { margin: 0; }
   gap: 0.4rem;
 }
 .pres-header h1 {
-  font-size: clamp(3rem, 8vh, 6.5rem);
+  font-size: clamp(2.3rem, 6.2vh, 5.2rem);
   font-weight: 800;
-  line-height: 1;
+  line-height: 1.1;
   letter-spacing: -0.02em;
+  padding: 0 1rem;
   animation: title-in-right 0.55s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 .pres-header h1.slide-left {
@@ -449,6 +450,159 @@ h1, h2, h3, p { margin: 0; }
   color: var(--ink-faint);
   font-size: 0.95rem;
 }
+
+/* ---------- Multi-group Presentation Arena ---------- */
+.multi-group-arena {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  padding: 0.5rem 2rem 1rem;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.multi-group-arena.count-1 {
+  grid-template-columns: minmax(0, 850px);
+  justify-content: center;
+}
+.multi-group-arena.count-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.multi-group-arena.count-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.multi-group-arena.count-4 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .multi-group-arena.count-2,
+  .multi-group-arena.count-3,
+  .multi-group-arena.count-4 {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+.group-card-rounded {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  border: 1px solid rgba(140, 205, 155, 0.24);
+  background: radial-gradient(circle at 50% 0%, rgba(20, 52, 38, 0.55), rgba(8, 20, 15, 0.78));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 28px rgba(74, 222, 128, 0.07);
+  overflow: hidden;
+  min-height: 0;
+  min-width: 0;
+}
+
+.group-card-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem 0.6rem;
+  border-bottom: 1px solid rgba(140, 205, 155, 0.12);
+  background: rgba(0, 0, 0, 0.18);
+  z-index: 2;
+  position: relative;
+}
+
+.group-badge {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--bit), #fde047);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-flex;
+  align-items: center;
+}
+
+.group-member-count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2em 0.7em;
+  border-radius: 9999px;
+  background: rgba(140, 205, 155, 0.12);
+  color: var(--ink-dim);
+  border: 1px solid rgba(140, 205, 155, 0.16);
+}
+
+.group-card-rounded .bubble-field {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Ready View Config ---------- */
+.reveal-config {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin: 0.35rem auto;
+  padding: 0.6rem 1.15rem;
+  background: rgba(10, 26, 19, 0.6);
+  border: 1px solid rgba(140, 205, 155, 0.18);
+  border-radius: 9999px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+.reveal-config .config-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pill-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px;
+  border-radius: 9999px;
+  border: 1px solid rgba(140, 205, 155, 0.12);
+  gap: 3px;
+}
+.pill-btn {
+  background: transparent;
+  border: none;
+  color: var(--ink-dim);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.3rem 0.95rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.pill-btn:hover:not(:disabled) {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.08);
+}
+.pill-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.pill-btn.active {
+  background: linear-gradient(135deg, var(--bit), var(--byte));
+  color: #0b1a11;
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(74, 222, 128, 0.35);
+}
+
 
 /* ---------- Bubble field ---------- */
 .bubble-field {

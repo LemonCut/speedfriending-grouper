@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import BubbleField from '../components/BubbleField.jsx';
+import { formatGroupTitle, chunkGroups } from '../formatGroupTitle.js';
 
-export default function Presentation({ groups, index, onNext, onPrev, onExit }) {
+export default function Presentation({ groups, groupsPerSlide = 1, index, onNext, onPrev, onExit }) {
   const prevIndexRef = useRef(index);
   const direction = index < prevIndexRef.current ? 'left' : 'right';
 
@@ -26,35 +27,62 @@ export default function Presentation({ groups, index, onNext, onPrev, onExit }) 
     return () => window.removeEventListener('keydown', onKey);
   }, [onNext, onPrev, onExit]);
 
-  const group = groups[index];
-  const names = useMemo(
-    () => group.members.map((m) => [m.firstName, m.lastName].filter(Boolean).join(' ') || m.name || ''),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [group.number, group.members.length],
-  );
+  const batches = useMemo(() => chunkGroups(groups, groupsPerSlide), [groups, groupsPerSlide]);
+  const currentBatch = batches[index] || batches[0] || [];
+  const title = formatGroupTitle(currentBatch);
+  const titleKey = currentBatch.map((g) => g.number).join('-');
 
   return (
     <main className="presentation">
       <header className="pres-header">
-        <h1 key={group.number} className={`gradient-text slide-${direction}`}>Group {group.number}</h1>
+        <h1 key={titleKey} className={`gradient-text slide-${direction}`}>{title}</h1>
         <div className="progress" aria-hidden="true">
-          {groups.map((g, i) => (
-            <i key={g.number} className={i === index ? 'current' : i < index ? 'done' : ''} />
+          {batches.map((b, i) => (
+            <i key={i} className={i === index ? 'current' : i < index ? 'done' : ''} />
           ))}
         </div>
       </header>
 
-      <BubbleField key={group.number} names={names} />
+      {groupsPerSlide === 1 ? (
+        <BubbleField
+          key={currentBatch[0]?.number}
+          names={
+            currentBatch[0]?.members.map(
+              (m) => [m.firstName, m.lastName].filter(Boolean).join(' ') || m.name || '',
+            ) || []
+          }
+        />
+      ) : (
+        <div className={`multi-group-arena count-${currentBatch.length}`}>
+          {currentBatch.map((group) => {
+            const names = group.members.map(
+              (m) => [m.firstName, m.lastName].filter(Boolean).join(' ') || m.name || '',
+            );
+            return (
+              <div key={group.number} className="group-card-rounded glass">
+                <div className="group-card-header">
+                  <span className="group-badge">Group {group.number}</span>
+                  <span className="group-member-count">
+                    {group.members.length} {group.members.length === 1 ? 'bit' : 'bits'}
+                  </span>
+                </div>
+                <BubbleField names={names} multiCount={groupsPerSlide} />
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <footer className="pres-footer">
         <span>
-          {group.number} / {groups.length}
+          {index + 1} / {batches.length}
         </span>
         <span>
           <span className="kbd">←</span> back · <span className="kbd">Space</span> / <span className="kbd">→</span>{' '}
-          {index === groups.length - 1 ? 'all groups' : 'next'}
+          {index === batches.length - 1 ? 'all groups' : 'next'}
         </span>
       </footer>
     </main>
   );
 }
+

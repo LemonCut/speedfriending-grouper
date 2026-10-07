@@ -7,6 +7,7 @@ import { ConfirmModal, PinModal } from '../components/Modals.jsx';
 
 const VIEW_KEY = 'sfg-view';
 const SLIDE_KEY = 'sfg-slide';
+const GROUPS_PER_SLIDE_KEY = 'sfg-groups-per-slide';
 
 /**
  * Host (projector) screen. Server state decides intake vs locked;
@@ -18,10 +19,15 @@ export default function Host() {
   const [state, setState] = useState(null);
   const [view, setView] = useState(() => sessionStorage.getItem(VIEW_KEY) || 'ready');
   const [slide, setSlide] = useState(() => Number(sessionStorage.getItem(SLIDE_KEY)) || 0);
+  const [groupsPerSlide, setGroupsPerSlide] = useState(() => {
+    const saved = Number(sessionStorage.getItem(GROUPS_PER_SLIDE_KEY));
+    return [1, 2, 3, 4].includes(saved) ? saved : 1;
+  });
   const [modal, setModal] = useState(null); // 'pin' | 'lock' | 'unlock'
 
   useEffect(() => sessionStorage.setItem(VIEW_KEY, view), [view]);
   useEffect(() => sessionStorage.setItem(SLIDE_KEY, String(slide)), [slide]);
+  useEffect(() => sessionStorage.setItem(GROUPS_PER_SLIDE_KEY, String(groupsPerSlide)), [groupsPerSlide]);
 
   const refresh = useCallback(() => api.state().then(setState).catch(() => {}), []);
   useEffect(() => {
@@ -31,11 +37,12 @@ export default function Host() {
   }, [refresh, authed]);
 
   const groups = state?.groups?.groups ?? [];
+  const totalSlides = Math.max(1, Math.ceil(groups.length / groupsPerSlide));
 
   const next = useCallback(() => {
-    if (slide >= groups.length - 1) setView('overview');
+    if (slide >= totalSlides - 1) setView('overview');
     else setSlide((s) => s + 1);
-  }, [slide, groups.length]);
+  }, [slide, totalSlides]);
   const prev = useCallback(() => setSlide((s) => Math.max(0, s - 1)), []);
   const toOverview = useCallback(() => setView('overview'), []);
   const startReveal = useCallback(() => {
@@ -79,7 +86,14 @@ export default function Host() {
     );
   } else if (view === 'presenting' && groups.length) {
     content = (
-      <Presentation groups={groups} index={Math.min(slide, groups.length - 1)} onNext={next} onPrev={prev} onExit={toOverview} />
+      <Presentation
+        groups={groups}
+        groupsPerSlide={groupsPerSlide}
+        index={Math.min(slide, totalSlides - 1)}
+        onNext={next}
+        onPrev={prev}
+        onExit={toOverview}
+      />
     );
   } else if (view === 'overview') {
     content = <Overview data={state.groups} authed={authed} onReplay={startReveal} onUnlock={() => setModal('unlock')} />;
@@ -94,7 +108,24 @@ export default function Host() {
           <p className="lede">
             Press <span className="kbd">Space</span> to begin the reveal
           </p>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div className="reveal-config">
+            <span className="config-label">Groups per slide:</span>
+            <div className="pill-group" role="radiogroup" aria-label="Groups per slide">
+              {[1, 2, 3, 4].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  id={`groups-per-slide-${n}`}
+                  className={`pill-btn ${groupsPerSlide === n ? 'active' : ''}`}
+                  disabled={groups.length > 0 && n > groups.length}
+                  onClick={() => setGroupsPerSlide(n)}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
             <button className="btn btn-primary" onClick={startReveal} id="start-reveal">Start the reveal</button>
             <button className="btn btn-ghost" onClick={toOverview} id="skip-to-overview">Skip to all groups</button>
           </div>
