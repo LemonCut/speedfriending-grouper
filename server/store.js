@@ -38,23 +38,38 @@ export class Store {
     return parse(fs.readFileSync(this.#file(role), 'utf8'), { columns: true, skip_empty_lines: true });
   }
 
-  add({ firstName, lastName, role }) {
+  add({ firstName, lastName, name, role }) {
     if (this.isLocked()) throw fail('Registration is closed — groups have been set.', 'LOCKED');
-    firstName = String(firstName ?? '').trim().replace(/\s+/g, ' ');
-    lastName = String(lastName ?? '').trim().replace(/\s+/g, ' ');
-    if (!firstName || !lastName) throw fail('Please enter your first and last name.', 'INVALID');
-    if (firstName.length > 40 || lastName.length > 40) throw fail('Names must be 40 characters or fewer.', 'INVALID');
+    if (name !== undefined) {
+      name = String(name ?? '').trim().replace(/\s+/g, ' ');
+      if (!name) throw fail('Please enter your name.', 'INVALID');
+      if (name.length > 80) throw fail('Name must be 80 characters or fewer.', 'INVALID');
+      const idx = name.indexOf(' ');
+      if (idx > -1) {
+        firstName = name.slice(0, idx);
+        lastName = name.slice(idx + 1);
+      } else {
+        firstName = name;
+        lastName = '';
+      }
+    } else {
+      firstName = String(firstName ?? '').trim().replace(/\s+/g, ' ');
+      lastName = String(lastName ?? '').trim().replace(/\s+/g, ' ');
+      if (!firstName || !lastName) throw fail('Please enter your first and last name.', 'INVALID');
+      if (firstName.length > 40 || lastName.length > 40) throw fail('Names must be 40 characters or fewer.', 'INVALID');
+    }
     if (!ROLES.includes(role)) throw fail('Please choose Bit or Byte.', 'INVALID');
 
-    const key = `${firstName} ${lastName}`.toLowerCase();
+    const displayName = [firstName, lastName].filter(Boolean).join(' ');
+    const key = displayName.toLowerCase();
     const exists = ROLES.some((r) =>
-      this.list(r).some((p) => `${p.firstName} ${p.lastName}`.toLowerCase() === key),
+      this.list(r).some((p) => [p.firstName, p.lastName].filter(Boolean).join(' ').toLowerCase() === key),
     );
-    if (exists) throw fail(`${firstName} ${lastName} is already registered.`, 'DUPLICATE');
+    if (exists) throw fail(`${displayName} is already registered.`, 'DUPLICATE');
 
     const rec = { id: crypto.randomUUID(), firstName, lastName, timestamp: new Date().toISOString() };
     fs.appendFileSync(this.#file(role), stringify([HEADER.map((h) => rec[h])]));
-    return { ...rec, role };
+    return { ...rec, name: displayName, role };
   }
 
   isLocked() {

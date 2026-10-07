@@ -32,6 +32,22 @@ test('trims names and rejects blanks / bad roles', () => {
   assert.throws(() => store.add({ firstName: 'A', lastName: 'X', role: 'nibble' }), /Bit or Byte/i);
 });
 
+test('supports single name string and parses into first/last', () => {
+  const rec1 = store.add({ name: 'Grace Hopper', role: 'byte' });
+  assert.equal(rec1.firstName, 'Grace');
+  assert.equal(rec1.lastName, 'Hopper');
+  assert.equal(rec1.name, 'Grace Hopper');
+
+  const rec2 = store.add({ name: 'Cher', role: 'bit' });
+  assert.equal(rec2.firstName, 'Cher');
+  assert.equal(rec2.lastName, '');
+  assert.equal(rec2.name, 'Cher');
+
+  assert.throws(() => store.add({ name: '   ', role: 'bit' }), /enter your name/i);
+  assert.throws(() => store.add({ name: 'Grace Hopper', role: 'bit' }), (e) => e.code === 'DUPLICATE');
+  assert.throws(() => store.add({ name: 'cher', role: 'byte' }), (e) => e.code === 'DUPLICATE');
+});
+
 test('rejects duplicate names across both lists (case-insensitive)', () => {
   store.add({ firstName: 'Ada', lastName: 'Lovelace', role: 'bit' });
   assert.throws(() => store.add({ firstName: 'ada', lastName: 'LOVELACE', role: 'byte' }), (e) => e.code === 'DUPLICATE');

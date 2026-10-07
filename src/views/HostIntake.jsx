@@ -15,11 +15,11 @@ export default function HostIntake({ state, authed }) {
   return (
     <main className="host-intake">
       <section className="intake-hero rise-in">
-        <span className="eyebrow">Speedfriending · Check-in open</span>
+        <span className="eyebrow">Check-in open</span>
         <h1>
-          <span className="gradient-text">Bits</span> &amp;
+          <span className="gradient-text">Bit-Byte</span>
           <br />
-          <span className="gradient-text">Bytes</span>
+          Speedfriending
         </h1>
         <p className="lede">Scan to check in. Once everyone’s here, we’ll reveal the groups.</p>
         <div className="qr-card glass">
@@ -39,7 +39,7 @@ export default function HostIntake({ state, authed }) {
           </div>
           <div className="counter byte glass rise-in" style={{ animationDelay: '0.2s' }}>
             <span className="num">{byteCount}</span>
-            <span className="lbl">Bytes = groups</span>
+            <span className="lbl">Bytes checked in</span>
           </div>
           <div className="counter glass rise-in" style={{ animationDelay: '0.3s' }}>
             <span className="num">{perGroup}</span>

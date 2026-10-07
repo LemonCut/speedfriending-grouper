@@ -1,7 +1,14 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import BubbleField from '../components/BubbleField.jsx';
 
 export default function Presentation({ groups, index, onNext, onPrev, onExit }) {
+  const prevIndexRef = useRef(index);
+  const direction = index < prevIndexRef.current ? 'left' : 'right';
+
+  useEffect(() => {
+    prevIndexRef.current = index;
+  }, [index]);
+
   useEffect(() => {
     const onKey = (e) => {
       if (e.target instanceof HTMLInputElement) return;
@@ -21,7 +28,7 @@ export default function Presentation({ groups, index, onNext, onPrev, onExit }) 
 
   const group = groups[index];
   const names = useMemo(
-    () => group.members.map((m) => `${m.firstName} ${m.lastName}`),
+    () => group.members.map((m) => [m.firstName, m.lastName].filter(Boolean).join(' ') || m.name || ''),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [group.number, group.members.length],
   );
@@ -29,7 +36,7 @@ export default function Presentation({ groups, index, onNext, onPrev, onExit }) 
   return (
     <main className="presentation">
       <header className="pres-header">
-        <h1 key={group.number} className="gradient-text">Group {group.number}</h1>
+        <h1 key={group.number} className={`gradient-text slide-${direction}`}>Group {group.number}</h1>
         <div className="progress" aria-hidden="true">
           {groups.map((g, i) => (
             <i key={g.number} className={i === index ? 'current' : i < index ? 'done' : ''} />

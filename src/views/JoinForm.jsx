@@ -2,14 +2,13 @@ import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 
 const ROLES = [
-  { id: 'bit', name: 'Bit', icon: '0/1', desc: 'I’m a little' },
-  { id: 'byte', name: 'Byte', icon: '8×', desc: 'I’m a big' },
+  { id: 'bit', name: 'Bit', desc: 'I’m a little' },
+  { id: 'byte', name: 'Byte', desc: 'I’m a big' },
 ];
 
 export default function JoinForm() {
   const [status, setStatus] = useState('loading'); // loading | open | closed | done
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [name, setName] = useState('');
   const [role, setRole] = useState(null);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -22,7 +21,7 @@ export default function JoinForm() {
       .catch(() => setStatus('open'));
   }, []);
 
-  const canSubmit = firstName.trim() && lastName.trim() && role && !submitting;
+  const canSubmit = name.trim() && role && !submitting;
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -30,7 +29,11 @@ export default function JoinForm() {
     setSubmitting(true);
     setError('');
     try {
-      const rec = await api.register({ firstName, lastName, role });
+      const trimmed = name.trim();
+      const idx = trimmed.indexOf(' ');
+      const first = idx > -1 ? trimmed.slice(0, idx) : trimmed;
+      const last = idx > -1 ? trimmed.slice(idx + 1) : '';
+      const rec = await api.register({ name: trimmed, firstName: first, lastName: last, role });
       setRegistered(rec);
       setStatus('done');
     } catch (err) {
@@ -42,8 +45,7 @@ export default function JoinForm() {
   }
 
   function reset() {
-    setFirstName('');
-    setLastName('');
+    setName('');
     setRole(null);
     setError('');
     setRegistered(null);
@@ -57,7 +59,6 @@ export default function JoinForm() {
 
         {status === 'closed' && (
           <div className="join-status">
-            <div className="big-emoji">🔒</div>
             <h1>Registration closed</h1>
             <p className="sub">Groups have already been set. Find an organizer if you still need a spot!</p>
           </div>
@@ -65,9 +66,8 @@ export default function JoinForm() {
 
         {status === 'done' && registered && (
           <div className="join-status">
-            <div className="big-emoji">🎉</div>
             <h1>
-              You’re in, <span className="gradient-text">{registered.firstName}</span>!
+              You’re in, <span className="gradient-text">{registered.name || registered.firstName}</span>!
             </h1>
             <span className={`tag tag-${registered.role}`}>
               Registered as a {registered.role === 'bit' ? 'Bit' : 'Byte'}
@@ -83,42 +83,22 @@ export default function JoinForm() {
           <form onSubmit={onSubmit} style={{ display: 'contents' }} noValidate>
             <header>
               <span className="eyebrow">Speedfriending check-in</span>
-              <h1>
-                Welcome to <span className="gradient-text">Bits &amp; Bytes</span>
-              </h1>
-              <p className="sub">Tell us who you are and we’ll find you a group.</p>
             </header>
 
-            <div className="field-row">
-              <label>
-                <span className="field-label">First name</span>
-                <input
-                  id="first-name"
-                  className="input"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  autoComplete="given-name"
-                  autoCapitalize="words"
-                  maxLength={40}
-                  placeholder="Ada"
-                  required
-                />
-              </label>
-              <label>
-                <span className="field-label">Last name</span>
-                <input
-                  id="last-name"
-                  className="input"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  autoComplete="family-name"
-                  autoCapitalize="words"
-                  maxLength={40}
-                  placeholder="Lovelace"
-                  required
-                />
-              </label>
-            </div>
+            <label>
+              <span className="field-label">Name</span>
+              <input
+                id="name"
+                className="input"
+                placeholder="What should people call you?"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                autoCapitalize="words"
+                maxLength={80}
+                required
+              />
+            </label>
 
             <div>
               <span className="field-label">Bit or Byte?</span>
@@ -134,7 +114,6 @@ export default function JoinForm() {
                     className="role-option"
                     onClick={() => setRole(r.id)}
                   >
-                    <span className="role-icon" style={{ color: `var(--${r.id})` }}>{r.icon}</span>
                     <span className="role-name">{r.name}</span>
                     <span className="role-desc">{r.desc}</span>
                   </button>

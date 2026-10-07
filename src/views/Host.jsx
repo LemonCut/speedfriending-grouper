@@ -89,9 +89,7 @@ export default function Host() {
         <div className="stack rise-in">
           <span className="eyebrow">Intake locked · {state.bitCount} bits · {groups.length} groups</span>
           <h1>
-            Ready to meet
-            <br />
-            <span className="gradient-text">your group?</span>
+            Group <span className="gradient-text">Reveal</span>
           </h1>
           <p className="lede">
             Press <span className="kbd">Space</span> to begin the reveal

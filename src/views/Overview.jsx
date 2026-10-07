@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-const fullName = (m) => `${m.firstName} ${m.lastName}`;
+const fullName = (m) => [m.firstName, m.lastName].filter(Boolean).join(' ') || m.name || '';
 
 function Highlight({ text, query }) {
   if (!query) return text;

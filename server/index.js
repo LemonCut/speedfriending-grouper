@@ -35,7 +35,7 @@ const isAdmin = (req) => req.get('x-admin-pin') === ADMIN_PIN;
 const requireAdmin = (req, res, next) =>
   isAdmin(req) ? next() : res.status(401).json({ error: 'Invalid organizer PIN.' });
 
-const fullName = (p) => `${p.firstName} ${p.lastName}`;
+const fullName = (p) => [p.firstName, p.lastName].filter(Boolean).join(' ') || p.name || '';
 
 app.get('/api/state', (req, res) => {
   const bits = store.list('bit');
@@ -63,7 +63,7 @@ app.get('/api/join-info', async (_req, res) => {
 app.post('/api/register', (req, res) => {
   try {
     const rec = store.add(req.body ?? {});
-    res.status(201).json({ firstName: rec.firstName, lastName: rec.lastName, role: rec.role });
+    res.status(201).json({ id: rec.id, name: rec.name || fullName(rec), firstName: rec.firstName, lastName: rec.lastName, role: rec.role });
   } catch (err) {
     const status = { LOCKED: 423, DUPLICATE: 409, INVALID: 400 }[err.code] ?? 500;
     res.status(status).json({ error: err.message, code: err.code });
